@@ -114,7 +114,7 @@ class CacheableBuilder extends Builder
      * @param array $values
      * @return \Illuminate\Database\Eloquent\Model|static
      */
-    public function firstOrNew(array $attributes = [], array $values = [])
+    public function firstOrNew(array $attributes = [], Closure|array $values = [])
     {
         return parent::firstOrNew($attributes, $values);
     }
@@ -282,7 +282,7 @@ class CacheableBuilder extends Builder
             $results = $this->take(1)->getWithoutCache($columns);
             return count($results) > 0 ? $results->first() : null;
         }
-        
+
         $results = $this->take(1)->getFromCache($columns);
 
         return count($results) > 0 ? $results->first() : null;
@@ -300,7 +300,7 @@ class CacheableBuilder extends Builder
         if (config('model-cache.enabled', true) === false) {
             return $this->getWithoutCache($columns);
         }
-        
+
         $minutes = $this->cacheMinutes ?: config('model-cache.cache_duration', 60);
         $cacheKey = $this->getCacheKey($columns);
         $cacheTags = $this->getCacheTags();
@@ -348,7 +348,7 @@ class CacheableBuilder extends Builder
         if (config('model-cache.enabled', true) === false) {
             return $this->withoutCache();
         }
-        
+
         $this->cacheMinutes = $minutes;
 
         return $this;
@@ -362,7 +362,7 @@ class CacheableBuilder extends Builder
     public function withoutCache()
     {
         $this->cacheMinutes = 0;
-        
+
         return $this;
     }
 
@@ -605,7 +605,7 @@ class CacheableBuilder extends Builder
 
         return $cache->remember($cacheKey, $minutes * 60, $callback);
     }
-    
+
     /**
      * Retrieve the "count" result of the query from cache.
      *
@@ -618,22 +618,22 @@ class CacheableBuilder extends Builder
             'count',
             is_array($columns) ? implode(',', $columns) : $columns
         ]);
-    
+
         $minutes = $this->cacheMinutes ?: config('model-cache.cache_duration', 60);
         $cacheTags = $this->getCacheTags();
         $cache = $this->getCacheDriver();
-    
+
         $callback = function () use ($columns) {
             return parent::count($columns);
         };
-    
+
         if ($cacheTags && $this->supportsTags($cache)) {
             return $cache->tags($cacheTags)->remember($cacheKey, $minutes * 60, $callback);
         }
-    
+
         return $cache->remember($cacheKey, $minutes * 60, $callback);
     }
-    
+
     /**
      * Retrieve the sum of the values of a given column from cache.
      *
@@ -646,22 +646,22 @@ class CacheableBuilder extends Builder
             'sum',
             $column
         ]);
-    
+
         $minutes = $this->cacheMinutes ?: config('model-cache.cache_duration', 60);
         $cacheTags = $this->getCacheTags();
         $cache = $this->getCacheDriver();
-    
+
         $callback = function () use ($column) {
             return parent::sum($column);
         };
-    
+
         if ($cacheTags && $this->supportsTags($cache)) {
             return $cache->tags($cacheTags)->remember($cacheKey, $minutes * 60, $callback);
         }
-    
+
         return $cache->remember($cacheKey, $minutes * 60, $callback);
     }
-    
+
     /**
      * Retrieve the maximum value of a given column from cache.
      *
@@ -674,22 +674,22 @@ class CacheableBuilder extends Builder
             'max',
             $column
         ]);
-    
+
         $minutes = $this->cacheMinutes ?: config('model-cache.cache_duration', 60);
         $cacheTags = $this->getCacheTags();
         $cache = $this->getCacheDriver();
-    
+
         $callback = function () use ($column) {
             return parent::max($column);
         };
-    
+
         if ($cacheTags && $this->supportsTags($cache)) {
             return $cache->tags($cacheTags)->remember($cacheKey, $minutes * 60, $callback);
         }
-    
+
         return $cache->remember($cacheKey, $minutes * 60, $callback);
     }
-    
+
     /**
      * Retrieve the minimum value of a given column from cache.
      *
@@ -702,22 +702,22 @@ class CacheableBuilder extends Builder
             'min',
             $column
         ]);
-    
+
         $minutes = $this->cacheMinutes ?: config('model-cache.cache_duration', 60);
         $cacheTags = $this->getCacheTags();
         $cache = $this->getCacheDriver();
-    
+
         $callback = function () use ($column) {
             return parent::min($column);
         };
-    
+
         if ($cacheTags && $this->supportsTags($cache)) {
             return $cache->tags($cacheTags)->remember($cacheKey, $minutes * 60, $callback);
         }
-    
+
         return $cache->remember($cacheKey, $minutes * 60, $callback);
     }
-    
+
     /**
      * Retrieve the average of the values of a given column from cache.
      *
@@ -730,22 +730,22 @@ class CacheableBuilder extends Builder
             'avg',
             $column
         ]);
-    
+
         $minutes = $this->cacheMinutes ?: config('model-cache.cache_duration', 60);
         $cacheTags = $this->getCacheTags();
         $cache = $this->getCacheDriver();
-    
+
         $callback = function () use ($column) {
             return parent::avg($column);
         };
-    
+
         if ($cacheTags && $this->supportsTags($cache)) {
             return $cache->tags($cacheTags)->remember($cacheKey, $minutes * 60, $callback);
         }
-    
+
         return $cache->remember($cacheKey, $minutes * 60, $callback);
     }
-    
+
     /**
      * Override the count method to automatically use cache.
      *
@@ -758,10 +758,10 @@ class CacheableBuilder extends Builder
         if (isset($this->cacheMinutes) && $this->cacheMinutes === 0) {
             return parent::count($columns);
         }
-    
+
         return $this->countFromCache($columns);
     }
-    
+
     /**
      * Override the sum method to automatically use cache.
      *
@@ -774,10 +774,10 @@ class CacheableBuilder extends Builder
         if (isset($this->cacheMinutes) && $this->cacheMinutes === 0) {
             return parent::sum($column);
         }
-    
+
         return $this->sumFromCache($column);
     }
-    
+
     /**
      * Override the max method to automatically use cache.
      *
@@ -790,10 +790,10 @@ class CacheableBuilder extends Builder
         if (isset($this->cacheMinutes) && $this->cacheMinutes === 0) {
             return parent::max($column);
         }
-    
+
         return $this->maxFromCache($column);
     }
-    
+
     /**
      * Override the min method to automatically use cache.
      *
@@ -806,10 +806,10 @@ class CacheableBuilder extends Builder
         if (isset($this->cacheMinutes) && $this->cacheMinutes === 0) {
             return parent::min($column);
         }
-    
+
         return $this->minFromCache($column);
     }
-    
+
     /**
      * Override the avg method to automatically use cache.
      *
@@ -822,10 +822,10 @@ class CacheableBuilder extends Builder
         if (isset($this->cacheMinutes) && $this->cacheMinutes === 0) {
             return parent::avg($column);
         }
-    
+
         return $this->avgFromCache($column);
     }
-    
+
     /**
      * Alias for the "avg" method.
      *
